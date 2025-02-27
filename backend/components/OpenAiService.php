@@ -1,7 +1,7 @@
 private function callOpenAiApi($prompt)
 {
     $data = [
-        'model' => 'gpt-4o', // используйте gpt-4o, если gpt-4o-mini не поддерживается
+        'model' => 'gpt-4o-mini',
         'messages' => [
             [
                 'role' => 'system',
