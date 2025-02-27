@@ -1,10 +1,8 @@
 
-import { Product } from '@/components/ProductGrid';
-
 // This would typically connect to your Yii2 backend
 // For now, we'll mock the API responses
 export const api = {
-  async searchProducts(ingredients: string[]): Promise<Product[]> {
+  async searchProducts(ingredients) {
     try {
       // In a real implementation, you would call your Yii2 backend
       // For example:
@@ -30,7 +28,7 @@ export const api = {
 
 // Mock products data
 // In a real implementation, this would come from your Yii2 backend
-const mockProducts: Product[] = [
+const mockProducts = [
   {
     id: 1,
     title: "Fresh Basil",

@@ -3,20 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import ProductCard from './ProductCard';
 
-export interface Product {
-  id: number;
-  title: string;
-  img: string;
-  price: number;
-}
-
-interface ProductGridProps {
-  className?: string;
-  products: Product[];
-  title: string;
-}
-
-const ProductGrid: React.FC<ProductGridProps> = ({ className, products, title }) => {
+const ProductGrid = ({ className, products, title }) => {
   if (!products.length) return null;
 
   return (

@@ -1,16 +1,8 @@
 
 // This would connect to your OpenAI API
 
-interface Recipe {
-  title: string;
-  ingredients: string[];
-  instructions: string;
-  cookingTime?: string;
-  difficulty?: string;
-}
-
 export const openai = {
-  async generateRecipe(dishName: string): Promise<Recipe> {
+  async generateRecipe(dishName) {
     try {
       // In a real implementation, you would call your backend which then calls OpenAI
       // For example:
@@ -34,7 +26,7 @@ export const openai = {
 };
 
 // Mock recipes for demonstration
-function getMockRecipe(dishName: string): Recipe {
+function getMockRecipe(dishName) {
   const dishNameLower = dishName.toLowerCase();
   
   if (dishNameLower.includes('pasta') || dishNameLower.includes('spaghetti')) {

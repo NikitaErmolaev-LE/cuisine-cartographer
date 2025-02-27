@@ -3,17 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { ChefHat, Clock, Utensils, BookOpen } from 'lucide-react';
 
-interface RecipeDisplayProps {
-  className?: string;
-  recipe: {
-    title: string;
-    instructions: string;
-    cookingTime?: string;
-    difficulty?: string;
-  } | null;
-}
-
-const RecipeDisplay: React.FC<RecipeDisplayProps> = ({ className, recipe }) => {
+const RecipeDisplay = ({ className, recipe }) => {
   if (!recipe) return null;
 
   // Split instructions into steps

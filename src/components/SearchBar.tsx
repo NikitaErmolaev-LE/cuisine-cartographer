@@ -5,16 +5,10 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-interface SearchBarProps {
-  className?: string;
-  onSearch: (query: string) => Promise<void>;
-  isLoading: boolean;
-}
-
-const SearchBar: React.FC<SearchBarProps> = ({ className, onSearch, isLoading }) => {
+const SearchBar = ({ className, onSearch, isLoading }) => {
   const [query, setQuery] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!query.trim()) {
       toast.error('Please enter a dish name');

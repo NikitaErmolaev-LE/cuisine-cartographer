@@ -1,15 +1,8 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Product } from './ProductGrid';
 
-interface ProductCardProps {
-  className?: string;
-  product: Product;
-  style?: React.CSSProperties;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({ className, product, style }) => {
+const ProductCard = ({ className, product, style }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 

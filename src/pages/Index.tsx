@@ -6,20 +6,14 @@ import RecipeDisplay from '@/components/RecipeDisplay';
 import ProductGrid from '@/components/ProductGrid';
 import { api } from '@/services/api';
 import { openai } from '@/services/openai';
-import { Product } from '@/components/ProductGrid';
 import { toast } from 'sonner';
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [recipe, setRecipe] = useState<{
-    title: string;
-    instructions: string;
-    cookingTime?: string;
-    difficulty?: string;
-  } | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [recipe, setRecipe] = useState(null);
+  const [products, setProducts] = useState([]);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query) => {
     setIsLoading(true);
     
     try {
