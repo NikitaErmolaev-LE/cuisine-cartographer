@@ -12,7 +12,7 @@ class OpenAiService extends Component
     /**
      * The OpenAI API key
      */
-    private $apiKey;
+    private $apiKey = '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';
     
     /**
      * The OpenAI API endpoint
@@ -48,9 +48,7 @@ class OpenAiService extends Component
             - ingredients (array of strings)
             - instructions (string with numbered steps)
             - cookingTime (string)
-            - difficulty (string)
-
-            Make sure the recipe is for European cuisine.";
+            - difficulty (string)";
 
         $response = $this->callOpenAiApi($prompt);
         
