@@ -38,4 +38,11 @@ private function callOpenAiApi($prompt)
 
     $decodedResponse = Json::decode($response, true);
 
-    // Проверяем, содержит ли ответ нужные ключ
+    // Проверяем, содержит ли ответ нужные ключи
+    if (!isset($decodedResponse['choices'][0]['message']['content'])) {
+        Yii::error("OpenAI API error: Unexpected response format: " . $response);
+        return false;
+    }
+
+    return $decodedResponse;
+}
