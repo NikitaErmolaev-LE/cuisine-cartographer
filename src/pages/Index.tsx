@@ -50,7 +50,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header className="" />
       
       <main className="container px-4 py-8">
         <div className="max-w-3xl mx-auto text-center mb-8 space-y-4 animate-fade-in">
@@ -62,12 +62,13 @@ const Index = () => {
           </p>
         </div>
         
-        <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        <SearchBar className="" onSearch={handleSearch} isLoading={isLoading} />
         
         {recipe && (
           <>
-            <RecipeDisplay recipe={recipe} />
+            <RecipeDisplay className="" recipe={recipe} />
             <ProductGrid 
+              className=""
               products={products} 
               title={`Ingredients for ${recipe.title}`} 
             />
