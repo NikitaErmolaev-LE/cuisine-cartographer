@@ -14,31 +14,60 @@ export const api = {
           .trim();
       });
       
-      // Search for products that match any of the ingredients
-      // Using individual queries instead of combining with OR to avoid syntax issues
+      // If no ingredients, return empty array
+      if (cleanedIngredients.length === 0) {
+        return [];
+      }
+      
+      // Start the query
       let query = supabase.from('product').select('*');
       
-      // Add filters for each ingredient (using ilike for case-insensitive search)
+      // For the first ingredient, add it to the query
       if (cleanedIngredients.length > 0) {
-        // Start with the first ingredient
+        // Use ilike for case-insensitive search
         query = query.ilike('title', `%${cleanedIngredients[0]}%`);
         
-        // Add additional ingredients with or conditions
+        // For each additional ingredient, add an OR condition
         for (let i = 1; i < cleanedIngredients.length; i++) {
+          // Use proper syntax for OR condition with Supabase
           query = query.or(`title.ilike.%${cleanedIngredients[i]}%`);
         }
       }
       
       // Execute the query
-      const { data: products, error } = await query;
+      let { data: products, error } = await query;
       
       if (error) {
         console.error('Supabase query error:', error);
-        throw error;
+        
+        // Try a simpler approach if the complex query fails
+        // Search for each ingredient individually and combine results
+        const allProducts = [];
+        
+        for (const ingredient of cleanedIngredients) {
+          const { data: ingredientProducts, error: ingredientError } = await supabase
+            .from('product')
+            .select('*')
+            .ilike('title', `%${ingredient}%`);
+            
+          if (!ingredientError && ingredientProducts) {
+            allProducts.push(...ingredientProducts);
+          }
+        }
+        
+        // Remove duplicates by ID
+        const uniqueProductIds = new Set();
+        products = allProducts.filter(product => {
+          if (uniqueProductIds.has(product.id)) {
+            return false;
+          }
+          uniqueProductIds.add(product.id);
+          return true;
+        });
       }
       
       // Transform the data to match the expected format in the application
-      const formattedProducts = products.map(product => ({
+      const formattedProducts = (products || []).map(product => ({
         id: product.id,
         title: product.title,
         price: parseFloat(product.price.toString()), // Convert to string first to fix TS error
