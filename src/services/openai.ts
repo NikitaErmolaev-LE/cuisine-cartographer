@@ -25,8 +25,8 @@ export const openai = {
     const cleanDishName = dishName.trim().replace(/\\+$/, '');
     
     try {
-      // Use the correct API endpoint for backend
-      const apiUrl = '/backend/web/api/generate-recipe';
+      // Use the API endpoint without the /backend prefix since the API is already at the right path
+      const apiUrl = 'api/generate-recipe';
       console.log("Calling API endpoint:", apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -52,6 +52,11 @@ export const openai = {
       }
     } catch (error) {
       console.error('Error generating recipe:', error);
+      
+      // Show toast with error message
+      toast.error('Failed to generate recipe', {
+        description: 'Using a fallback recipe instead.'
+      });
       
       // Use fallback recipe when API fails
       console.log('Using fallback recipe generator for:', cleanDishName);

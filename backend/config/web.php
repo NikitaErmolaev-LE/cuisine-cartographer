@@ -48,9 +48,8 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-                ['class' => 'yii\rest\UrlRule', 'controller' => 'api'],
-                'GET api/search-products' => 'api/search-products',
-                'POST api/generate-recipe' => 'api/generate-recipe',
+                'api/generate-recipe' => 'api/generate-recipe',
+                'api/search-products' => 'api/search-products',
             ],
         ],
     ],
