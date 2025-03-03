@@ -5,45 +5,56 @@ import { supabase } from "@/integrations/supabase/client";
 export const api = {
   async searchProducts(ingredients) {
     try {
-      // Convert ingredients array to lowercase and remove any weight information
+      // If no ingredients, return empty array
+      if (!ingredients || ingredients.length === 0) {
+        return [];
+      }
+      
+      // Clean up ingredients removing weight information
       const cleanedIngredients = ingredients.map(ingredient => {
-        // Remove weight information (numbers followed by units like g, kg, oz, lb, etc.)
         return ingredient
           .toLowerCase()
           .replace(/\d+\s*(g|kg|ml|l|oz|lb|tbsp|tsp|cup|cups|piece|pieces)\b/gi, '')
           .trim();
       });
       
-      // If no ingredients, return empty array
-      if (cleanedIngredients.length === 0) {
-        return [];
-      }
-      
       console.log("Searching for ingredients:", cleanedIngredients);
       
-      // Use a simpler, more reliable approach
-      // Search for each ingredient individually and combine results
+      // Search for each ingredient individually for better reliability
       const allProducts = [];
       
       for (const ingredient of cleanedIngredients) {
-        console.log(`Searching for: ${ingredient}`);
-        const { data: ingredientProducts, error: ingredientError } = await supabase
-          .from('product')
-          .select('*')
-          .ilike('title', `%${ingredient}%`);
+        // Skip very short ingredient names to avoid too broad searches
+        if (ingredient.length < 3) continue;
+        
+        // Extract the main ingredient name (first word, or first two for compound ingredients)
+        const words = ingredient.split(' ');
+        const searchTerm = words.length > 1 && words[0].length > 2 ? 
+          words.slice(0, 2).join(' ') : words[0];
           
-        if (ingredientError) {
-          console.error('Error searching for ingredient:', ingredient, ingredientError);
-        } else if (ingredientProducts) {
-          console.log(`Found ${ingredientProducts.length} products for: ${ingredient}`);
-          allProducts.push(...ingredientProducts);
+        console.log(`Searching for: ${searchTerm}`);
+        
+        try {
+          const { data: ingredientProducts, error: ingredientError } = await supabase
+            .from('product')
+            .select('*')
+            .ilike('title', `%${searchTerm}%`);
+            
+          if (ingredientError) {
+            console.error('Error searching for ingredient:', searchTerm, ingredientError);
+          } else if (ingredientProducts && ingredientProducts.length > 0) {
+            console.log(`Found ${ingredientProducts.length} products for: ${searchTerm}`);
+            allProducts.push(...ingredientProducts);
+          }
+        } catch (searchError) {
+          console.error(`Error in individual search for ${searchTerm}:`, searchError);
         }
       }
       
       // Remove duplicates by ID
       const uniqueProductIds = new Set();
       const products = allProducts.filter(product => {
-        if (uniqueProductIds.has(product.id)) {
+        if (!product || uniqueProductIds.has(product.id)) {
           return false;
         }
         uniqueProductIds.add(product.id);
@@ -52,11 +63,11 @@ export const api = {
       
       console.log(`Found ${products.length} unique products for all ingredients`);
       
-      // Transform the data to match the expected format in the application
-      const formattedProducts = (products || []).map(product => ({
+      // Transform the data to match the expected format
+      const formattedProducts = products.map(product => ({
         id: product.id,
         title: product.title,
-        price: parseFloat(product.price.toString()), // Convert to string first to fix TS error
+        price: parseFloat(product.price.toString()),
         description: `${product.title} - Quality ingredient`,
         imageUrl: product.image || '/placeholder.svg'
       }));
@@ -65,24 +76,28 @@ export const api = {
       if (formattedProducts.length === 0) {
         console.log('No matching products found for ingredients:', ingredients);
         
-        // Get some random products as fallback
-        const { data: randomProducts, error: randomError } = await supabase
-          .from('product')
-          .select('*')
-          .limit(5);
+        try {
+          const { data: randomProducts, error: randomError } = await supabase
+            .from('product')
+            .select('*')
+            .limit(5);
+            
+          if (randomError) {
+            console.error('Error fetching random products:', randomError);
+            return [];
+          }
           
-        if (randomError) {
-          console.error('Error fetching random products:', randomError);
+          return randomProducts.map(product => ({
+            id: product.id,
+            title: product.title,
+            price: parseFloat(product.price.toString()),
+            description: `${product.title} - Quality ingredient`,
+            imageUrl: product.image || '/placeholder.svg'
+          }));
+        } catch (fallbackError) {
+          console.error('Error in fallback product fetch:', fallbackError);
           return [];
         }
-        
-        return randomProducts.map(product => ({
-          id: product.id,
-          title: product.title,
-          price: parseFloat(product.price.toString()), // Convert to string first to fix TS error
-          description: `${product.title} - Quality ingredient`,
-          imageUrl: product.image || '/placeholder.svg'
-        }));
       }
       
       return formattedProducts;
