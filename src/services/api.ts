@@ -14,16 +14,23 @@ export const api = {
           .trim();
       });
       
-      // Create an array of queries to search for each ingredient
-      const queries = cleanedIngredients.map(ingredient => {
-        return `title.ilike.%${ingredient}%`;
-      });
-      
       // Search for products that match any of the ingredients
-      const { data: products, error } = await supabase
-        .from('product')
-        .select('*')
-        .or(queries.join(','));
+      // Using individual queries instead of combining with OR to avoid syntax issues
+      let query = supabase.from('product').select('*');
+      
+      // Add filters for each ingredient (using ilike for case-insensitive search)
+      if (cleanedIngredients.length > 0) {
+        // Start with the first ingredient
+        query = query.ilike('title', `%${cleanedIngredients[0]}%`);
+        
+        // Add additional ingredients with or conditions
+        for (let i = 1; i < cleanedIngredients.length; i++) {
+          query = query.or(`title.ilike.%${cleanedIngredients[i]}%`);
+        }
+      }
+      
+      // Execute the query
+      const { data: products, error } = await query;
       
       if (error) {
         console.error('Supabase query error:', error);
