@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { openai } from '@/services/openai';
 import { api } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, PackagePlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,14 +47,20 @@ const Index = () => {
         throw new Error('Invalid recipe data');
       }
       
-      const ingredients = (generatedRecipe as Recipe).ingredients;
+      // Fix TypeScript error by properly typing the result and checking for ingredients
+      const typedRecipe = generatedRecipe as Recipe;
+      if (!Array.isArray(typedRecipe.ingredients)) {
+        throw new Error('Invalid recipe ingredients');
+      }
+      
+      const ingredients = typedRecipe.ingredients;
       const foundProducts = await api.searchProducts(ingredients);
       
-      setRecipe(generatedRecipe as Recipe);
+      setRecipe(typedRecipe);
       setProducts(foundProducts as Product[]);
       
       toast.success('Recipe found!', {
-        description: `Found ${foundProducts.length} ingredients for ${(generatedRecipe as Recipe).title}`
+        description: `Found ${foundProducts.length} ingredients for ${typedRecipe.title}`
       });
     } catch (error) {
       console.error('Search failed:', error);
@@ -79,6 +85,28 @@ const Index = () => {
       return [...prev, { ...product, quantity: 1 }];
     });
     toast.success(`Added ${product.title} to cart!`);
+  };
+
+  const addAllToCart = () => {
+    if (products.length === 0) return;
+    
+    const newCartItems = [...cartItems];
+    
+    products.forEach(product => {
+      const existingItemIndex = newCartItems.findIndex(item => item.id === product.id);
+      
+      if (existingItemIndex >= 0) {
+        newCartItems[existingItemIndex] = {
+          ...newCartItems[existingItemIndex],
+          quantity: newCartItems[existingItemIndex].quantity + 1
+        };
+      } else {
+        newCartItems.push({ ...product, quantity: 1 });
+      }
+    });
+    
+    setCartItems(newCartItems);
+    toast.success('All products added to cart!');
   };
 
   const updateQuantity = (productId: number, delta: number) => {
@@ -214,9 +242,20 @@ const Index = () => {
               </div>
             </div>
             
-            <h3 className="text-xl font-medium mt-8 mb-4">
-              Products for {recipe.title}
-            </h3>
+            <div className="flex justify-between items-center mt-8 mb-4">
+              <h3 className="text-xl font-medium">
+                Products for {recipe.title}
+              </h3>
+              <Button 
+                onClick={addAllToCart} 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={products.length === 0}
+              >
+                <PackagePlus className="h-4 w-4" />
+                Add all to cart
+              </Button>
+            </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {products.map((product) => (
