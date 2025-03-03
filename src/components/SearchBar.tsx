@@ -36,7 +36,7 @@ const SearchBar = ({ className, onSearch, isLoading }) => {
           <input
             type="text"
             className="block w-full pl-10 pr-20 py-3 text-base text-foreground bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            placeholder="Enter a European dish name..."
+            placeholder="Ask AI for the dish..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             disabled={isLoading}

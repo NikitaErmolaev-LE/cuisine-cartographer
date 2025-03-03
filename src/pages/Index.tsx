@@ -56,11 +56,14 @@ const Index = () => {
       const ingredients = typedRecipe.ingredients;
       const foundProducts = await api.searchProducts(ingredients);
       
+      // Ensure foundProducts is an array before accessing length property
+      const productsArray = Array.isArray(foundProducts) ? foundProducts : [];
+      
       setRecipe(typedRecipe);
-      setProducts(foundProducts as Product[]);
+      setProducts(productsArray as Product[]);
       
       toast.success('Recipe found!', {
-        description: `Found ${foundProducts.length} ingredients for ${typedRecipe.title}`
+        description: `Found ${productsArray.length} ingredients for ${typedRecipe.title}`
       });
     } catch (error) {
       console.error('Search failed:', error);
