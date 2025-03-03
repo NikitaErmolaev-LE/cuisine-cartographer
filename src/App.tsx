@@ -18,8 +18,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/index" element={<Index />} />
-          {/* Redirect API requests to the backend */}
-          <Route path="/api/*" element={<NotFound />} />
+          {/* Don't redirect API requests to NotFound as they need to go to the backend */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

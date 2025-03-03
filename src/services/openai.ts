@@ -25,8 +25,8 @@ export const openai = {
     const cleanDishName = dishName.trim().replace(/\\+$/, '');
     
     try {
-      // Use the API endpoint without the /backend prefix since the API is already at the right path
-      const apiUrl = 'api/generate-recipe';
+      // Update API URL to include the full path to the backend
+      const apiUrl = '/index.php?r=api/generate-recipe';
       console.log("Calling API endpoint:", apiUrl);
       
       const response = await fetch(apiUrl, {

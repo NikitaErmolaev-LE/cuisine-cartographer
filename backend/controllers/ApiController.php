@@ -44,6 +44,8 @@ class ApiController extends Controller
      */
     public function actionSearchProducts()
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
         $ingredients = Yii::$app->request->get('ingredients', '');
         $ingredientsArray = explode(',', $ingredients);
         
@@ -69,7 +71,21 @@ class ApiController extends Controller
      */
     public function actionGenerateRecipe()
     {
-        $dishName = Yii::$app->request->post('dishName', '');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        // Get POST data
+        $request = Yii::$app->request;
+        $post = $request->post();
+        $dishName = isset($post['dishName']) ? $post['dishName'] : '';
+        
+        // If POST is empty, try to get JSON input
+        if (empty($post)) {
+            $jsonInput = file_get_contents('php://input');
+            if (!empty($jsonInput)) {
+                $data = json_decode($jsonInput, true);
+                $dishName = isset($data['dishName']) ? $data['dishName'] : '';
+            }
+        }
         
         if (empty($dishName)) {
             return [
@@ -78,8 +94,18 @@ class ApiController extends Controller
             ];
         }
         
+        Yii::info("Generating recipe for dish: $dishName");
+        
         $openAiService = new OpenAiService();
         $recipe = $openAiService->generateRecipe($dishName);
+        
+        if (!$recipe) {
+            Yii::error("Failed to generate recipe for: $dishName");
+            return [
+                'success' => false,
+                'message' => 'Failed to generate recipe',
+            ];
+        }
         
         return [
             'success' => true,
