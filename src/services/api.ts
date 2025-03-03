@@ -5,11 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 export const api = {
   async searchProducts(ingredients) {
     try {
-      // Convert ingredients array to lowercase for case-insensitive comparison
-      const lowerCaseIngredients = ingredients.map(ingredient => ingredient.toLowerCase());
+      // Convert ingredients array to lowercase and remove any weight information
+      const cleanedIngredients = ingredients.map(ingredient => {
+        // Remove weight information (numbers followed by units like g, kg, oz, lb, etc.)
+        return ingredient
+          .toLowerCase()
+          .replace(/\d+\s*(g|kg|ml|l|oz|lb|tbsp|tsp|cup|cups|piece|pieces)\b/gi, '')
+          .trim();
+      });
       
       // Create an array of queries to search for each ingredient
-      const queries = lowerCaseIngredients.map(ingredient => {
+      const queries = cleanedIngredients.map(ingredient => {
         return `title.ilike.%${ingredient}%`;
       });
       
@@ -28,7 +34,7 @@ export const api = {
       const formattedProducts = products.map(product => ({
         id: product.id,
         title: product.title,
-        price: parseFloat(product.price),
+        price: parseFloat(product.price.toString()), // Convert to string first to fix TS error
         description: `${product.title} - Quality ingredient`,
         imageUrl: product.image || '/placeholder.svg'
       }));
@@ -51,7 +57,7 @@ export const api = {
         return randomProducts.map(product => ({
           id: product.id,
           title: product.title,
-          price: parseFloat(product.price),
+          price: parseFloat(product.price.toString()), // Convert to string first to fix TS error
           description: `${product.title} - Quality ingredient`,
           imageUrl: product.image || '/placeholder.svg'
         }));
