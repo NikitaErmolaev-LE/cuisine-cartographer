@@ -7,7 +7,7 @@ export const api = {
     try {
       // If no ingredients, return empty array
       if (!ingredients || ingredients.length === 0) {
-        return [];
+        return { products: [], notFoundIngredients: [] };
       }
       
       // Clean up ingredients removing weight information and sanitize input
@@ -23,6 +23,8 @@ export const api = {
       
       // Search for each ingredient individually for better reliability
       const allProducts = [];
+      const foundIngredients = new Set();
+      const notFoundIngredients = [];
       
       for (const ingredient of cleanedIngredients) {
         // Skip very short ingredient names to avoid too broad searches
@@ -36,21 +38,26 @@ export const api = {
         console.log(`Searching for: ${searchTerm}`);
         
         try {
-          // Limit the search to 3 products per ingredient to avoid overwhelming results
+          // Limit to just 1 product per ingredient
           const { data: ingredientProducts, error: ingredientError } = await supabase
             .from('product')
             .select('*')
             .ilike('title', `%${searchTerm}%`)
-            .limit(3);
+            .limit(1);
             
           if (ingredientError) {
             console.error('Error searching for ingredient:', searchTerm, ingredientError);
+            notFoundIngredients.push(ingredient);
           } else if (ingredientProducts && ingredientProducts.length > 0) {
             console.log(`Found ${ingredientProducts.length} products for: ${searchTerm}`);
+            foundIngredients.add(ingredient);
             allProducts.push(...ingredientProducts);
+          } else {
+            notFoundIngredients.push(ingredient);
           }
         } catch (searchError) {
           console.error(`Error in individual search for ${searchTerm}:`, searchError);
+          notFoundIngredients.push(ingredient);
         }
       }
       
@@ -65,6 +72,7 @@ export const api = {
       });
       
       console.log(`Found ${products.length} unique products for all ingredients`);
+      console.log(`Not found ingredients: ${notFoundIngredients.join(', ')}`);
       
       // Transform the data to match the expected format
       const formattedProducts = products.map(product => ({
@@ -88,28 +96,31 @@ export const api = {
             
           if (randomError) {
             console.error('Error fetching random products:', randomError);
-            return [];
+            return { products: [], notFoundIngredients };
           }
           
           if (randomProducts && randomProducts.length > 0) {
             console.log(`Falling back to ${randomProducts.length} random products`);
-            return randomProducts.map(product => ({
-              id: product.id,
-              title: product.title,
-              price: parseFloat(product.price.toString()),
-              description: `${product.title} - Quality ingredient`,
-              imageUrl: product.image || '/placeholder.svg'
-            }));
+            return { 
+              products: randomProducts.map(product => ({
+                id: product.id,
+                title: product.title,
+                price: parseFloat(product.price.toString()),
+                description: `${product.title} - Quality ingredient`,
+                imageUrl: product.image || '/placeholder.svg'
+              })),
+              notFoundIngredients
+            };
           }
         } catch (fallbackError) {
           console.error('Error in fallback product fetch:', fallbackError);
         }
       }
       
-      return formattedProducts;
+      return { products: formattedProducts, notFoundIngredients };
     } catch (error) {
       console.error('Error searching products:', error);
-      return [];
+      return { products: [], notFoundIngredients: ingredients };
     }
   }
 };

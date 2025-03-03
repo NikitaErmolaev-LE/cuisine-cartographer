@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { openai } from '@/services/openai';
 import { api } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Minus, Plus, Trash2, PackagePlus } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, PackagePlus, AlertCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +37,7 @@ const Index = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [notFoundIngredients, setNotFoundIngredients] = useState<string[]>([]);
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
@@ -54,16 +55,20 @@ const Index = () => {
       }
       
       const ingredients = typedRecipe.ingredients;
-      const foundProducts = await api.searchProducts(ingredients);
+      const result = await api.searchProducts(ingredients);
       
-      // Ensure foundProducts is an array before accessing length property
-      const productsArray = Array.isArray(foundProducts) ? foundProducts : [];
+      // Ensure products is an array before accessing length property
+      const productsArray = Array.isArray(result.products) ? result.products : [];
       
       setRecipe(typedRecipe);
       setProducts(productsArray as Product[]);
+      setNotFoundIngredients(result.notFoundIngredients || []);
+      
+      const notFoundCount = result.notFoundIngredients?.length || 0;
       
       toast.success('Recipe found!', {
-        description: `Found ${productsArray.length} ingredients for ${typedRecipe.title}`
+        description: `Found ${productsArray.length} ingredients for ${typedRecipe.title}` + 
+                    (notFoundCount > 0 ? ` (${notFoundCount} not available)` : '')
       });
     } catch (error) {
       console.error('Search failed:', error);
@@ -228,9 +233,22 @@ const Index = () => {
                 <div>
                   <h3 className="text-lg font-medium mb-2">Ingredients</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {recipe.ingredients.map((ingredient, index) => (
-                      <li key={index}>{ingredient}</li>
-                    ))}
+                    {recipe.ingredients.map((ingredient, index) => {
+                      const isNotFound = notFoundIngredients.some(
+                        notFound => ingredient.toLowerCase().includes(notFound.toLowerCase())
+                      );
+                      
+                      return (
+                        <li key={index} className={isNotFound ? "text-destructive flex items-center" : ""}>
+                          {ingredient}
+                          {isNotFound && (
+                            <span className="inline-flex items-center ml-2" title="Not available">
+                              <AlertCircle className="h-4 w-4" />
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
                 
@@ -248,6 +266,11 @@ const Index = () => {
             <div className="flex justify-between items-center mt-8 mb-4">
               <h3 className="text-xl font-medium">
                 Products for {recipe.title}
+                {notFoundIngredients.length > 0 && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    ({notFoundIngredients.length} ingredients not available)
+                  </span>
+                )}
               </h3>
               <Button 
                 onClick={addAllToCart} 
