@@ -25,7 +25,7 @@ export const openai = {
     const cleanDishName = dishName.trim().replace(/\\+$/, '');
     
     try {
-      // Update API URL to include the full path to the backend
+      // Using the same API endpoint but now the backend uses Gemini
       const apiUrl = '/index.php?r=api/generate-recipe';
       console.log("Calling API endpoint:", apiUrl);
       

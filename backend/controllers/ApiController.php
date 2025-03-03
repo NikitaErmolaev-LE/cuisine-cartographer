@@ -1,4 +1,3 @@
-
 <?php
 
 namespace app\controllers;
@@ -9,7 +8,7 @@ use yii\web\Response;
 use yii\filters\ContentNegotiator;
 use yii\filters\Cors;
 use app\models\Product;
-use app\components\OpenAiService;
+use app\components\GeminiService;
 
 class ApiController extends Controller
 {
@@ -65,7 +64,7 @@ class ApiController extends Controller
     }
 
     /**
-     * Generate a recipe using OpenAI
+     * Generate a recipe using Gemini
      *
      * @return array
      */
@@ -96,8 +95,8 @@ class ApiController extends Controller
         
         Yii::info("Generating recipe for dish: $dishName");
         
-        $openAiService = new OpenAiService();
-        $recipe = $openAiService->generateRecipe($dishName);
+        $geminiService = new GeminiService();
+        $recipe = $geminiService->generateRecipe($dishName);
         
         if (!$recipe) {
             Yii::error("Failed to generate recipe for: $dishName");
