@@ -69,12 +69,138 @@ const mockRecipes = {
     instructions: "1. Heat stock in a saucepan and keep at a gentle simmer.\n2. In a large pan, heat olive oil and sauté onion until soft.\n3. Add garlic and cook for 1 minute more.\n4. Add rice and stir for 1-2 minutes until translucent.\n5. Pour in wine and stir until absorbed.\n6. Add mushrooms and cook for 2 minutes.\n7. Add hot stock one ladle at a time, stirring continuously and waiting until each addition is absorbed before adding more.\n8. Continue for about 18-20 minutes until rice is creamy but still has slight bite.\n9. Remove from heat, stir in butter and Parmesan, cover and rest for 2 minutes.\n10. Season with salt and pepper, garnish with parsley, and serve with extra Parmesan.",
     cookingTime: "40 minutes",
     difficulty: "Intermediate"
+  },
+  "reuben sandwich": {
+    title: "Classic Reuben Sandwich",
+    ingredients: [
+      "8 slices rye bread",
+      "400g corned beef, thinly sliced",
+      "250g Swiss cheese, sliced",
+      "200g sauerkraut, drained",
+      "4 tbsp Russian dressing",
+      "2 tbsp butter, softened"
+    ],
+    instructions: "1. Preheat a skillet or griddle over medium heat.\n2. Spread butter on one side of each slice of bread.\n3. Spread Russian dressing on the non-buttered side of 4 slices of bread.\n4. Layer each sandwich with corned beef, Swiss cheese, and sauerkraut.\n5. Top with the remaining bread slices, buttered side out.\n6. Grill the sandwiches for 3-4 minutes per side, until the bread is golden brown and the cheese is melted.\n7. Slice diagonally and serve hot with pickles on the side.",
+    cookingTime: "15 minutes",
+    difficulty: "Easy"
   }
+};
+
+// Common ingredients by dish type
+const commonIngredients = {
+  sandwich: ["bread", "butter", "lettuce", "tomato", "cheese", "mayonnaise", "mustard"],
+  salad: ["lettuce", "olive oil", "vinegar", "salt", "pepper", "cucumber", "tomato"],
+  pasta: ["pasta", "olive oil", "garlic", "salt", "pepper", "parmesan cheese"],
+  soup: ["stock or broth", "onion", "garlic", "carrot", "celery", "salt", "pepper"],
+  cake: ["flour", "sugar", "butter", "eggs", "baking powder", "vanilla extract", "salt"],
+  stew: ["meat", "onion", "garlic", "potato", "carrot", "stock", "herbs"],
+  curry: ["onion", "garlic", "ginger", "curry powder", "coconut milk", "tomato", "spices"],
+  stir_fry: ["oil", "garlic", "ginger", "soy sauce", "vegetables", "protein", "sesame oil"],
+  pie: ["flour", "butter", "salt", "sugar", "filling ingredients"],
+  bread: ["flour", "yeast", "salt", "water", "sugar"]
+};
+
+// Generate a realistic recipe for unknown dishes
+const generateRecipe = (dishName) => {
+  // Capitalize the dish name
+  const title = dishName.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  
+  // Determine dish type for ingredient selection
+  let dishType = 'stew'; // Default type
+  const lowerDishName = dishName.toLowerCase();
+  
+  if (lowerDishName.includes('sandwich') || lowerDishName.includes('burger')) {
+    dishType = 'sandwich';
+  } else if (lowerDishName.includes('salad')) {
+    dishType = 'salad';
+  } else if (lowerDishName.includes('pasta') || lowerDishName.includes('spaghetti') || lowerDishName.includes('lasagna')) {
+    dishType = 'pasta';
+  } else if (lowerDishName.includes('soup')) {
+    dishType = 'soup';
+  } else if (lowerDishName.includes('cake') || lowerDishName.includes('cookie') || lowerDishName.includes('brownie')) {
+    dishType = 'cake';
+  } else if (lowerDishName.includes('stew') || lowerDishName.includes('casserole')) {
+    dishType = 'stew';
+  } else if (lowerDishName.includes('curry')) {
+    dishType = 'curry';
+  } else if (lowerDishName.includes('stir') || lowerDishName.includes('fry')) {
+    dishType = 'stir_fry';
+  } else if (lowerDishName.includes('pie') || lowerDishName.includes('tart')) {
+    dishType = 'pie';
+  } else if (lowerDishName.includes('bread') || lowerDishName.includes('muffin') || lowerDishName.includes('roll')) {
+    dishType = 'bread';
+  }
+  
+  // Get base ingredients for the dish type
+  let ingredients = [...commonIngredients[dishType]];
+  
+  // Add specific ingredients based on dish name
+  lowerDishName.split(' ').forEach(word => {
+    if (word.length > 3 && !ingredients.includes(word)) {
+      // Add the word as an ingredient if it's not already there and not a common word
+      if (!['with', 'and', 'the', 'for', 'from', 'style', 'made'].includes(word)) {
+        ingredients.push(word);
+      }
+    }
+  });
+  
+  // Limit to 8 ingredients and capitalize first letter
+  ingredients = ingredients.slice(0, 8).map(ing => 
+    ing.charAt(0).toUpperCase() + ing.slice(1)
+  );
+  
+  // Generate instructions based on dish type
+  let instructions = "";
+  
+  switch (dishType) {
+    case 'sandwich':
+      instructions = "1. Prepare all ingredients, slicing vegetables and cheese as needed.\n2. Toast the bread if desired.\n3. Spread condiments on the bread slices.\n4. Layer the ingredients on the bread.\n5. Top with the second slice of bread and cut as desired.\n6. Serve immediately.";
+      break;
+    case 'salad':
+      instructions = "1. Wash and prepare all vegetables.\n2. Combine all ingredients in a large bowl.\n3. Prepare the dressing by mixing oil, vinegar, and seasonings.\n4. Toss the salad with the dressing just before serving.\n5. Serve chilled.";
+      break;
+    case 'pasta':
+      instructions = "1. Bring a large pot of salted water to a boil.\n2. Cook pasta according to package instructions until al dente.\n3. While pasta cooks, prepare the sauce by sautéing aromatics and other ingredients.\n4. Drain pasta, reserving some cooking water.\n5. Combine pasta with sauce, adding pasta water if needed for consistency.\n6. Serve hot with grated cheese on top.";
+      break;
+    case 'soup':
+      instructions = "1. Prepare all ingredients, chopping vegetables into even pieces.\n2. In a large pot, sauté aromatics until fragrant.\n3. Add remaining ingredients and broth.\n4. Bring to a boil, then reduce heat and simmer until vegetables are tender.\n5. Season to taste and serve hot.";
+      break;
+    case 'cake':
+      instructions = "1. Preheat oven to 350°F (175°C) and prepare your baking pan.\n2. Mix dry ingredients in one bowl.\n3. Cream butter and sugar in another bowl, then add eggs and vanilla.\n4. Gradually combine wet and dry ingredients.\n5. Pour batter into prepared pan and bake for 30-35 minutes or until a toothpick comes out clean.\n6. Cool completely before frosting or serving.";
+      break;
+    default:
+      instructions = "1. Prepare all ingredients according to recipe requirements.\n2. Cook following traditional methods for this dish.\n3. Combine ingredients in the proper order.\n4. Adjust seasonings to taste.\n5. Serve and enjoy!";
+  }
+  
+  // Determine cooking time and difficulty based on dish type
+  let cookingTime = "30 minutes";
+  let difficulty = "Intermediate";
+  
+  if (dishType === 'sandwich' || dishType === 'salad') {
+    cookingTime = "15 minutes";
+    difficulty = "Easy";
+  } else if (dishType === 'stew' || dishType === 'curry') {
+    cookingTime = "60 minutes";
+    difficulty = "Intermediate";
+  } else if (dishType === 'cake' || dishType === 'bread') {
+    cookingTime = "45 minutes plus cooling/rising time";
+    difficulty = "Intermediate";
+  }
+  
+  return {
+    title: `${title}`,
+    ingredients: ingredients,
+    instructions: instructions,
+    cookingTime: cookingTime,
+    difficulty: difficulty
+  };
 };
 
 export const openai = {
   async generateRecipe(dishName) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // Simulate network delay
       setTimeout(() => {
         const lowerCaseDishName = dishName.toLowerCase();
@@ -91,22 +217,9 @@ export const openai = {
           }
         }
         
-        // If no match found, generate a generic recipe
-        const genericRecipe = {
-          title: `${dishName.charAt(0).toUpperCase() + dishName.slice(1)}`,
-          ingredients: [
-            "Ingredient 1",
-            "Ingredient 2",
-            "Ingredient 3",
-            "Ingredient 4",
-            "Ingredient 5"
-          ],
-          instructions: "1. Prepare all ingredients.\n2. Cook according to traditional methods.\n3. Combine ingredients in the proper order.\n4. Serve and enjoy!",
-          cookingTime: "30-45 minutes",
-          difficulty: "Intermediate"
-        };
-        
-        resolve(genericRecipe);
+        // If no match found, generate a dynamic recipe
+        const generatedRecipe = generateRecipe(dishName);
+        resolve(generatedRecipe);
       }, 1500); // 1.5 second delay to simulate API call
     });
   }

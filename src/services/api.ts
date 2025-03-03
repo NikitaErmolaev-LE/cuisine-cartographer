@@ -19,52 +19,38 @@ export const api = {
         return [];
       }
       
-      // Start the query
-      let query = supabase.from('product').select('*');
+      console.log("Searching for ingredients:", cleanedIngredients);
       
-      // For the first ingredient, add it to the query
-      if (cleanedIngredients.length > 0) {
-        // Use ilike for case-insensitive search
-        query = query.ilike('title', `%${cleanedIngredients[0]}%`);
-        
-        // For each additional ingredient, add an OR condition
-        for (let i = 1; i < cleanedIngredients.length; i++) {
-          // Use proper syntax for OR condition with Supabase
-          query = query.or(`title.ilike.%${cleanedIngredients[i]}%`);
+      // Use a simpler, more reliable approach
+      // Search for each ingredient individually and combine results
+      const allProducts = [];
+      
+      for (const ingredient of cleanedIngredients) {
+        console.log(`Searching for: ${ingredient}`);
+        const { data: ingredientProducts, error: ingredientError } = await supabase
+          .from('product')
+          .select('*')
+          .ilike('title', `%${ingredient}%`);
+          
+        if (ingredientError) {
+          console.error('Error searching for ingredient:', ingredient, ingredientError);
+        } else if (ingredientProducts) {
+          console.log(`Found ${ingredientProducts.length} products for: ${ingredient}`);
+          allProducts.push(...ingredientProducts);
         }
       }
       
-      // Execute the query
-      let { data: products, error } = await query;
-      
-      if (error) {
-        console.error('Supabase query error:', error);
-        
-        // Try a simpler approach if the complex query fails
-        // Search for each ingredient individually and combine results
-        const allProducts = [];
-        
-        for (const ingredient of cleanedIngredients) {
-          const { data: ingredientProducts, error: ingredientError } = await supabase
-            .from('product')
-            .select('*')
-            .ilike('title', `%${ingredient}%`);
-            
-          if (!ingredientError && ingredientProducts) {
-            allProducts.push(...ingredientProducts);
-          }
+      // Remove duplicates by ID
+      const uniqueProductIds = new Set();
+      const products = allProducts.filter(product => {
+        if (uniqueProductIds.has(product.id)) {
+          return false;
         }
-        
-        // Remove duplicates by ID
-        const uniqueProductIds = new Set();
-        products = allProducts.filter(product => {
-          if (uniqueProductIds.has(product.id)) {
-            return false;
-          }
-          uniqueProductIds.add(product.id);
-          return true;
-        });
-      }
+        uniqueProductIds.add(product.id);
+        return true;
+      });
+      
+      console.log(`Found ${products.length} unique products for all ingredients`);
       
       // Transform the data to match the expected format in the application
       const formattedProducts = (products || []).map(product => ({
