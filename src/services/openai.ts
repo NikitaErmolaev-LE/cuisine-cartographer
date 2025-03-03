@@ -4,6 +4,10 @@
 export const openai = {
   async generateRecipe(dishName: string) {
     try {
+      // Sanitize the input by removing any trailing backslashes that might be causing issues
+      const sanitizedDishName = dishName.replace(/\\+$/, '');
+      console.log(`Generating recipe for: ${sanitizedDishName}`);
+      
       // Update the API URL to include the full path to the backend endpoint
       const backendUrl = import.meta.env.PROD 
         ? '/backend/web/api/generate-recipe' 
@@ -16,7 +20,7 @@ export const openai = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ dishName }),
+        body: JSON.stringify({ dishName: sanitizedDishName }),
       });
       
       if (!response.ok) {
@@ -45,7 +49,7 @@ export const openai = {
 
 // Fallback recipe generator for when the API connection fails
 function generateFallbackRecipe(dishName: string): any {
-  const lowercaseDish = dishName.toLowerCase();
+  const lowercaseDish = dishName.toLowerCase().replace(/\\+$/, '');
   let cookingTime, difficulty, ingredients, instructions;
   
   // Determine dish type based on name
@@ -150,7 +154,7 @@ function generateFallbackRecipe(dishName: string): any {
   }
   
   // Add specific ingredients based on dish name
-  const dishWords = dishName.toLowerCase().split(' ');
+  const dishWords = lowercaseDish.split(' ');
   dishWords.forEach(word => {
     if (word.length > 3 && !ingredients.some(i => i.toLowerCase().includes(word))) {
       // Add the ingredient if it's not already in the list
@@ -159,7 +163,7 @@ function generateFallbackRecipe(dishName: string): any {
   });
   
   return {
-    title: `${dishName.charAt(0).toUpperCase() + dishName.slice(1)}`,
+    title: `${dishName.charAt(0).toUpperCase() + dishName.slice(1).replace(/\\+$/, '')}`,
     ingredients: ingredients,
     instructions: instructions,
     cookingTime: cookingTime,

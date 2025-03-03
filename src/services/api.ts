@@ -10,11 +10,12 @@ export const api = {
         return [];
       }
       
-      // Clean up ingredients removing weight information
+      // Clean up ingredients removing weight information and sanitize input
       const cleanedIngredients = ingredients.map(ingredient => {
         return ingredient
           .toLowerCase()
           .replace(/\d+\s*(g|kg|ml|l|oz|lb|tbsp|tsp|cup|cups|piece|pieces)\b/gi, '')
+          .replace(/\\+$/, '')
           .trim();
       });
       
@@ -35,10 +36,12 @@ export const api = {
         console.log(`Searching for: ${searchTerm}`);
         
         try {
+          // Limit the search to 3 products per ingredient to avoid overwhelming results
           const { data: ingredientProducts, error: ingredientError } = await supabase
             .from('product')
             .select('*')
-            .ilike('title', `%${searchTerm}%`);
+            .ilike('title', `%${searchTerm}%`)
+            .limit(3);
             
           if (ingredientError) {
             console.error('Error searching for ingredient:', searchTerm, ingredientError);
@@ -77,6 +80,7 @@ export const api = {
         console.log('No matching products found for ingredients:', ingredients);
         
         try {
+          // Get random products from the database as fallback
           const { data: randomProducts, error: randomError } = await supabase
             .from('product')
             .select('*')
@@ -87,16 +91,18 @@ export const api = {
             return [];
           }
           
-          return randomProducts.map(product => ({
-            id: product.id,
-            title: product.title,
-            price: parseFloat(product.price.toString()),
-            description: `${product.title} - Quality ingredient`,
-            imageUrl: product.image || '/placeholder.svg'
-          }));
+          if (randomProducts && randomProducts.length > 0) {
+            console.log(`Falling back to ${randomProducts.length} random products`);
+            return randomProducts.map(product => ({
+              id: product.id,
+              title: product.title,
+              price: parseFloat(product.price.toString()),
+              description: `${product.title} - Quality ingredient`,
+              imageUrl: product.image || '/placeholder.svg'
+            }));
+          }
         } catch (fallbackError) {
           console.error('Error in fallback product fetch:', fallbackError);
-          return [];
         }
       }
       
