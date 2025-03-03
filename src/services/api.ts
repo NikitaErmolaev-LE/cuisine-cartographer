@@ -1,115 +1,66 @@
 
-// Mock implementation of API service
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock product database
-const mockProducts = [
-  {
-    id: 1,
-    title: "Spaghetti",
-    price: 2.99,
-    description: "High quality Italian pasta",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 2,
-    title: "Parmesan Cheese",
-    price: 5.49,
-    description: "Aged Italian cheese, perfect for pasta dishes",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 3,
-    title: "Pancetta",
-    price: 4.99,
-    description: "Italian cured pork belly meat",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 4,
-    title: "Eggs",
-    price: 3.49,
-    description: "Free-range organic eggs",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 5,
-    title: "Olive Oil",
-    price: 8.99,
-    description: "Extra virgin olive oil from Italy",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 6,
-    title: "Pizza Dough",
-    price: 3.99,
-    description: "Ready-made pizza dough",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 7,
-    title: "Mozzarella",
-    price: 4.49,
-    description: "Fresh mozzarella cheese",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 8,
-    title: "Tomatoes",
-    price: 2.99,
-    description: "San Marzano tomatoes",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 9,
-    title: "Basil",
-    price: 1.99,
-    description: "Fresh Italian basil",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 10,
-    title: "Arborio Rice",
-    price: 4.99,
-    description: "Italian risotto rice",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 11,
-    title: "Mushrooms",
-    price: 3.49,
-    description: "Mixed gourmet mushrooms",
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: 12,
-    title: "White Wine",
-    price: 12.99,
-    description: "Dry white wine, perfect for cooking",
-    imageUrl: "/placeholder.svg"
-  }
-];
-
+// Function to search products from Supabase database
 export const api = {
   async searchProducts(ingredients) {
-    return new Promise((resolve) => {
-      // Simulate network delay
-      setTimeout(() => {
-        // Filter products based on ingredients
-        const foundProducts = mockProducts.filter(product => {
-          return ingredients.some(ingredient => {
-            const lowerCaseIngredient = ingredient.toLowerCase();
-            return product.title.toLowerCase().includes(lowerCaseIngredient) || 
-                   lowerCaseIngredient.includes(product.title.toLowerCase());
-          });
-        });
+    try {
+      // Convert ingredients array to lowercase for case-insensitive comparison
+      const lowerCaseIngredients = ingredients.map(ingredient => ingredient.toLowerCase());
+      
+      // Create an array of queries to search for each ingredient
+      const queries = lowerCaseIngredients.map(ingredient => {
+        return `title.ilike.%${ingredient}%`;
+      });
+      
+      // Search for products that match any of the ingredients
+      const { data: products, error } = await supabase
+        .from('product')
+        .select('*')
+        .or(queries.join(','));
+      
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+      
+      // Transform the data to match the expected format in the application
+      const formattedProducts = products.map(product => ({
+        id: product.id,
+        title: product.title,
+        price: parseFloat(product.price),
+        description: `${product.title} - Quality ingredient`,
+        imageUrl: product.image || '/placeholder.svg'
+      }));
+      
+      // If no products found, return some default products
+      if (formattedProducts.length === 0) {
+        console.log('No matching products found for ingredients:', ingredients);
         
-        // If no products found, return some default products
-        if (foundProducts.length === 0) {
-          resolve(mockProducts.slice(0, 5));
-        } else {
-          resolve(foundProducts);
+        // Get some random products as fallback
+        const { data: randomProducts, error: randomError } = await supabase
+          .from('product')
+          .select('*')
+          .limit(5);
+          
+        if (randomError) {
+          console.error('Error fetching random products:', randomError);
+          return [];
         }
-      }, 1000); // 1 second delay to simulate API call
-    });
+        
+        return randomProducts.map(product => ({
+          id: product.id,
+          title: product.title,
+          price: parseFloat(product.price),
+          description: `${product.title} - Quality ingredient`,
+          imageUrl: product.image || '/placeholder.svg'
+        }));
+      }
+      
+      return formattedProducts;
+    } catch (error) {
+      console.error('Error searching products:', error);
+      return [];
+    }
   }
 };
